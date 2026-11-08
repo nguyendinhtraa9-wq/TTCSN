@@ -1,0 +1,13 @@
+package vn.edu.haui.quanlythuctap;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class QuanlythuctapApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}

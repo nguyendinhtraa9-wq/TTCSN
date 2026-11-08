@@ -1,0 +1,549 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản lý thực tập sinh viên | HaUI</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#253449}
+header{background:#1769aa;color:white;padding:20px 26px}
+header h1{font-size:22px;margin:0 0 7px}
+header p{margin:0;font-size:14px}
+.layout{display:flex;min-height:calc(100vh - 80px)}
+aside{width:235px;flex-shrink:0;background:white;padding:16px 10px;border-right:1px solid #e2e8f0}
+nav button{display:block;width:100%;padding:12px;border:0;border-radius:6px;background:white;text-align:left;cursor:pointer;margin-bottom:4px;color:#344054;font-size:14px}
+nav button:hover,nav button.active{background:#e7f1fc;color:#1769aa}
+main{flex:1;min-width:0;padding:25px}
+.page{display:none}
+.page.active{display:block}
+h2{margin-top:0}
+.muted{color:#667085;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;margin:20px 0}
+.card,.panel{background:white;border:1px solid #e1e7ef;border-radius:9px;padding:20px;margin-bottom:18px}
+.card p{margin:0 0 12px;color:#667085}
+.card strong{font-size:30px;color:#1769aa}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+input,select,textarea{font:inherit;font-size:14px;padding:11px;border:1px solid #cbd5e1;border-radius:5px;width:100%;background:white}
+.toolbar input{flex:1;min-width:220px;width:auto}
+button{font-family:inherit}
+.btn{padding:10px 13px;border:0;border-radius:5px;cursor:pointer;font-size:13px}
+.primary{background:#1769aa;color:white}
+.secondary{background:#e9edf3;color:#344054}
+.edit{background:#fff0cc;color:#825500}
+.delete{background:#fee4e2;color:#b42318}
+.table-wrap{overflow-x:auto;background:white;border-radius:8px;border:1px solid #e3e8ef}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:12px;border-bottom:1px solid #e8edf3;text-align:left;font-size:13px;vertical-align:top}
+th{background:#f8fafc;white-space:nowrap}
+.actions{display:flex;gap:6px}
+.message{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;color:#1769aa}
+.message.error{color:#b42318}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:13px;font-weight:bold}
+.form-actions{display:flex;gap:10px;margin-top:20px}
+[hidden]{display:none!important}
+@media(max-width:800px){
+.layout{display:block}
+aside{width:100%;border-right:0;border-bottom:1px solid #ddd}
+nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+main{padding:14px}
+.form-grid{grid-template-columns:1fr}
+header{padding:17px}
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>HỆ THỐNG QUẢN LÝ THỰC TẬP SINH VIÊN</h1>
+    <p>Trường Đại học Công nghiệp Hà Nội - HaUI</p>
+</header>
+
+<div class="layout">
+<aside>
+<nav id="menu">
+    <button class="active" data-page="dashboard">🏠 Tổng quan</button>
+    <button data-module="students">👨‍🎓 Sinh viên</button>
+    <button data-module="teachers">👨‍🏫 Giảng viên</button>
+    <button data-module="companies">🏢 Doanh nghiệp</button>
+    <button data-module="internships">📅 Đợt thực tập</button>
+    <button data-module="registrations">📝 Đăng ký thực tập</button>
+    <button data-module="reports">📄 Báo cáo thực tập</button>
+    <button data-module="diaries">📔 Nhật ký thực tập</button>
+    <button data-module="evaluations">⭐ Kết quả đánh giá</button>
+</nav>
+</aside>
+
+<main>
+<section id="dashboard" class="page active">
+    <h2>Tổng quan hệ thống</h2>
+    <p class="muted">Quản lý thông tin thực tập sinh viên trên một giao diện thống nhất.</p>
+    <div class="stats">
+        <div class="card"><p>Sinh viên</p><strong id="count-students">—</strong></div>
+        <div class="card"><p>Giảng viên</p><strong id="count-teachers">—</strong></div>
+        <div class="card"><p>Doanh nghiệp</p><strong id="count-companies">—</strong></div>
+        <div class="card"><p>Đợt thực tập</p><strong id="count-internships">—</strong></div>
+    </div>
+    <div class="panel">
+        <h3>Trạng thái kết nối</h3>
+        <div id="apiStatus" class="muted">Đang kiểm tra các API...</div>
+    </div>
+    <div class="panel">
+        <h3>Hướng dẫn sử dụng</h3>
+        <p>1. Chọn chức năng ở menu bên trái.</p>
+        <p>2. Sử dụng ô tìm kiếm để lọc dữ liệu.</p>
+        <p>3. Nhấn Thêm, Sửa hoặc Xóa để quản lý dữ liệu.</p>
+        <p class="muted">Dữ liệu được đọc và ghi thông qua API Spring Boot. Các bản ghi có liên kết khóa ngoại có thể không xóa được nếu còn dữ liệu phụ thuộc.</p>
+    </div>
+</section>
+
+<div id="modulePages"></div>
+</main>
+</div>
+
+<script>
+"use strict";
+
+/*
+ * CẤU HÌNH MODULE
+ * Các endpoint giả định theo cấu trúc Controller REST hiện tại.
+ * Trường dữ liệu phải khớp với JSON của từng Entity.
+ */
+const MODULES = {
+    students: {
+        title: "Quản lý sinh viên",
+        api: "/api/sinh-vien",
+        key: "maSV",
+        count: true,
+        fields: [
+            ["maSV","Mã sinh viên","text",true],
+            ["hoTen","Họ tên","text",true],
+            ["ngaySinh","Ngày sinh","date",false],
+            ["gioiTinh","Giới tính","text",false],
+            ["lop","Lớp","text",false],
+            ["nganh","Ngành","text",false],
+            ["email","Email","email",false],
+            ["sdt","Số điện thoại","text",false]
+        ]
+    },
+    teachers: {
+        title: "Quản lý giảng viên",
+        api: "/api/giang-vien",
+        key: "maGV",
+        count: true,
+        fields: [
+            ["maGV","Mã giảng viên","text",true],
+            ["hoTen","Họ tên","text",true],
+            ["email","Email","email",false],
+            ["sdt","Số điện thoại","text",false],
+            ["khoa","Khoa","text",false]
+        ]
+    },
+    companies: {
+        title: "Quản lý doanh nghiệp",
+        api: "/api/doanh-nghiep",
+        key: "maDN",
+        count: true,
+        fields: [
+            ["maDN","Mã doanh nghiệp","text",true],
+            ["tenDN","Tên doanh nghiệp","text",true],
+            ["diaChi","Địa chỉ","text",false],
+            ["email","Email","email",false],
+            ["sdt","Số điện thoại","text",false],
+            ["linhVuc","Lĩnh vực","text",false]
+        ]
+    },
+    internships: {
+        title: "Quản lý đợt thực tập",
+        api: "/api/dot-thuc-tap",
+        key: "maDot",
+        count: true,
+        fields: [
+            ["maDot","Mã đợt","text",true],
+            ["tenDot","Tên đợt thực tập","text",true],
+            ["ngayBatDau","Ngày bắt đầu","date",false],
+            ["ngayKetThuc","Ngày kết thúc","date",false],
+            ["trangThai","Trạng thái","text",false],
+            ["moTa","Mô tả","textarea",false]
+        ]
+    },
+    registrations: {
+        title: "Quản lý đăng ký thực tập",
+        api: "/api/dang-ky-thuc-tap",
+        key: "maDK",
+        fields: [
+            ["maDK","Mã đăng ký","text",true],
+            ["maSV","Mã sinh viên","text",true],
+            ["maGV","Mã giảng viên","text",false],
+            ["maDot","Mã đợt thực tập","text",false],
+            ["maDN","Mã doanh nghiệp","text",false],
+            ["ngayDangKy","Ngày đăng ký","date",false],
+            ["trangThai","Trạng thái","text",false],
+            ["lyDoTuChoi","Lý do từ chối","textarea",false]
+        ]
+    },
+    reports: {
+        title: "Quản lý báo cáo thực tập",
+        api: "/api/bao-cao-thuc-tap",
+        key: "maBC",
+        fields: [
+            ["maBC","Mã báo cáo","text",true],
+            ["maSV","Mã sinh viên","text",true],
+            ["maDot","Mã đợt thực tập","text",false],
+            ["tenBaoCao","Tên báo cáo","text",true],
+            ["ngayNop","Ngày nộp","date",false],
+            ["fileBaoCao","Đường dẫn/tên file báo cáo","text",false],
+            ["trangThai","Trạng thái","text",false]
+        ]
+    },
+    diaries: {
+        title: "Quản lý nhật ký thực tập",
+        api: "/api/nhat-ky-thuc-tap",
+        key: "maNK",
+        fields: [
+            ["maNK","Mã nhật ký","text",true],
+            ["maSV","Mã sinh viên","text",true],
+            ["ngayThucHien","Ngày thực hiện","date",true],
+            ["noiDungCongViec","Nội dung công việc","textarea",true],
+            ["ketQua","Kết quả","textarea",false],
+            ["ghiChu","Ghi chú","textarea",false]
+        ]
+    },
+    evaluations: {
+        title: "Quản lý kết quả đánh giá",
+        api: "/api/ket-qua-danh-gia",
+        key: "maDG",
+        fields: [
+            ["maDG","Mã đánh giá","text",true],
+            ["maSV","Mã sinh viên","text",true],
+            ["maGV","Mã giảng viên","text",false],
+            ["maNPT","Mã người phụ trách","text",false],
+            ["diem","Điểm","number",false],
+            ["thaiDo","Thái độ","text",false],
+            ["kyNang","Kỹ năng","text",false],
+            ["mucDoHoanThanh","Mức độ hoàn thành","text",false],
+            ["nhanXet","Nhận xét","textarea",false]
+        ]
+    }
+};
+
+const cache = {};
+const editing = {};
+
+function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    })[c]);
+}
+
+function enc(value) {
+    return encodeURIComponent(String(value ?? ""));
+}
+
+function message(id, text, error = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle("error", error);
+}
+
+async function request(url, options = {}) {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        const text = await response.text();
+        let reason = text;
+        try {
+            const obj = JSON.parse(text);
+            reason = obj.message || obj.error || text;
+        } catch (_) {}
+        throw new Error(reason || `HTTP ${response.status}`);
+    }
+    if (response.status === 204) return null;
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+}
+
+function buildPages() {
+    const root = document.getElementById("modulePages");
+
+    for (const [id, cfg] of Object.entries(MODULES)) {
+        const headers = cfg.fields.map(f => `<th>${esc(f[1])}</th>`).join("");
+
+        root.insertAdjacentHTML("beforeend", `
+        <section class="page" id="page-${id}">
+            <h2>${esc(cfg.title)}</h2>
+            <p class="muted">Dữ liệu được quản lý thông qua API: ${esc(cfg.api)}</p>
+            <div class="toolbar">
+                <input id="${id}-search" type="search"
+                    placeholder="Tìm kiếm theo mã hoặc nội dung..."
+                    oninput="filterRows('${id}')">
+                <button class="btn primary" onclick="openForm('${id}')">+ Thêm mới</button>
+                <button class="btn secondary" onclick="loadModule('${id}')">Tải lại</button>
+            </div>
+            <p class="message" id="${id}-message" role="status"></p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>${headers}<th>Thao tác</th></tr></thead>
+                    <tbody id="${id}-body">
+                        <tr><td colspan="${cfg.fields.length + 1}">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel" id="${id}-form-panel" hidden>
+                <h3 id="${id}-form-title">Thêm mới</h3>
+                <form id="${id}-form" onsubmit="saveRecord(event,'${id}')">
+                    <div class="form-grid">
+                        ${cfg.fields.map(f => `
+                            <div class="field">
+                                <label for="${id}-field-${f[0]}">
+                                    ${esc(f[1])}${f[3] ? ' <span style="color:#b42318">*</span>' : ''}
+                                </label>
+                                ${f[2] === "textarea"
+                                    ? `<textarea id="${id}-field-${f[0]}" rows="3" ${f[3] ? "required" : ""}></textarea>`
+                                    : `<input id="${id}-field-${f[0]}" type="${f[2]}" ${f[3] ? "required" : ""} ${f[0] === cfg.key ? 'data-key="true"' : ""}>`
+                                }
+                            </div>
+                        `).join("")}
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn primary" type="submit">Lưu</button>
+                        <button class="btn secondary" type="button" onclick="closeForm('${id}')">Hủy</button>
+                    </div>
+                </form>
+            </div>
+        </section>`);
+    }
+}
+
+function showPage(id, button) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    const target = id === "dashboard" ? "dashboard" : "page-" + id;
+    document.getElementById(target).classList.add("active");
+
+    document.querySelectorAll("#menu button").forEach(b => b.classList.remove("active"));
+    if (button) button.classList.add("active");
+
+    if (id === "dashboard") {
+        Object.keys(MODULES).forEach(loadModule);
+    } else {
+        loadModule(id);
+    }
+}
+
+function renderRows(id, records) {
+    const cfg = MODULES[id];
+    const body = document.getElementById(id + "-body");
+
+    if (!records.length) {
+        body.innerHTML = `<tr><td colspan="${cfg.fields.length + 1}" class="muted">Không có dữ liệu.</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = records.map(record => `
+        <tr>
+            ${cfg.fields.map(f => `<td>${esc(record[f[0]])}</td>`).join("")}
+            <td>
+                <div class="actions">
+                    <button class="btn edit" onclick="editRecord('${id}','${enc(record[cfg.key])}')">Sửa</button>
+                    <button class="btn delete" onclick="deleteRecord('${id}','${enc(record[cfg.key])}')">Xóa</button>
+                </div>
+            </td>
+        </tr>`).join("");
+}
+
+function filterRows(id) {
+    const cfg = MODULES[id];
+    const keyword = document.getElementById(id + "-search").value.trim().toLowerCase();
+    const filtered = (cache[id] || []).filter(record =>
+        cfg.fields.some(f => String(record[f[0]] ?? "").toLowerCase().includes(keyword))
+    );
+    renderRows(id, filtered);
+}
+
+async function loadModule(id) {
+    const cfg = MODULES[id];
+    if (!cfg) return;
+
+    try {
+        const data = await request(cfg.api);
+        if (!Array.isArray(data)) {
+            throw new Error("API không trả về danh sách JSON.");
+        }
+
+        cache[id] = data;
+        filterRows(id);
+
+        if (cfg.count) {
+            document.getElementById("count-" + id).textContent = data.length;
+        }
+
+        message(id + "-message", "Đã tải " + data.length + " bản ghi.");
+        updateStatus(id, true, data.length);
+    } catch (error) {
+        document.getElementById(id + "-body").innerHTML =
+            `<tr><td colspan="${cfg.fields.length + 1}">${esc(error.message)}</td></tr>`;
+
+        message(id + "-message", "Lỗi tải dữ liệu: " + error.message, true);
+
+        if (cfg.count) {
+            document.getElementById("count-" + id).textContent = "—";
+        }
+        updateStatus(id, false, error.message);
+    }
+}
+
+const statusResults = {};
+
+function updateStatus(id, success, detail) {
+    statusResults[id] = {success, detail};
+
+    const labels = Object.entries(MODULES).map(([key, cfg]) => {
+        const result = statusResults[key];
+        const status = !result ? "Đang kiểm tra"
+            : result.success ? "Kết nối OK"
+            : "Lỗi kết nối";
+
+        return `${cfg.title}: ${status}${result && !result.success ? " — " + result.detail : ""}`;
+    });
+
+    document.getElementById("apiStatus").innerHTML =
+        labels.map(line => `<p>${esc(line)}</p>`).join("");
+}
+
+function openForm(id) {
+    const cfg = MODULES[id];
+    editing[id] = null;
+
+    document.getElementById(id + "-form").reset();
+    document.getElementById(id + "-form-title").textContent = "Thêm mới: " + cfg.title;
+    document.getElementById(id + "-form-panel").hidden = false;
+
+    const keyInput = document.getElementById(id + "-field-" + cfg.key);
+    keyInput.disabled = false;
+
+    message(id + "-message", "");
+    document.getElementById(id + "-form-panel").scrollIntoView({
+        behavior: "smooth", block: "start"
+    });
+}
+
+function closeForm(id) {
+    document.getElementById(id + "-form-panel").hidden = true;
+    document.getElementById(id + "-form").reset();
+
+    const cfg = MODULES[id];
+    document.getElementById(id + "-field-" + cfg.key).disabled = false;
+    editing[id] = null;
+}
+
+function editRecord(id, encodedKey) {
+    const cfg = MODULES[id];
+    const key = decodeURIComponent(encodedKey);
+    const record = (cache[id] || []).find(
+        item => String(item[cfg.key]) === key
+    );
+
+    if (!record) {
+        alert("Không tìm thấy bản ghi.");
+        return;
+    }
+
+    editing[id] = key;
+
+    cfg.fields.forEach(f => {
+        const input = document.getElementById(id + "-field-" + f[0]);
+        input.value = record[f[0]] ?? "";
+    });
+
+    document.getElementById(id + "-field-" + cfg.key).disabled = true;
+    document.getElementById(id + "-form-title").textContent = "Cập nhật: " + cfg.title;
+    document.getElementById(id + "-form-panel").hidden = false;
+
+    document.getElementById(id + "-form-panel").scrollIntoView({
+        behavior: "smooth", block: "start"
+    });
+}
+
+async function saveRecord(event, id) {
+    event.preventDefault();
+
+    const cfg = MODULES[id];
+    const isEditing = editing[id] !== null && editing[id] !== undefined;
+    const record = {};
+
+    for (const f of cfg.fields) {
+        const input = document.getElementById(id + "-field-" + f[0]);
+        const value = input.value.trim();
+
+        if (f[3] && !value) {
+            alert("Vui lòng nhập " + f[1] + ".");
+            input.focus();
+            return;
+        }
+
+        if (f[2] === "number") {
+            record[f[0]] = value === "" ? null : Number(value);
+        } else {
+            record[f[0]] = value === "" ? null : value;
+        }
+    }
+
+    const key = isEditing ? editing[id] : record[cfg.key];
+    const url = isEditing ? cfg.api + "/" + enc(key) : cfg.api;
+
+    try {
+        await request(url, {
+            method: isEditing ? "PUT" : "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(record)
+        });
+
+        closeForm(id);
+        await loadModule(id);
+        message(id + "-message", isEditing ? "Cập nhật thành công." : "Thêm mới thành công.");
+    } catch (error) {
+        message(id + "-message", "Không thể lưu dữ liệu: " + error.message, true);
+    }
+}
+
+async function deleteRecord(id, encodedKey) {
+    const cfg = MODULES[id];
+    const key = decodeURIComponent(encodedKey);
+
+    if (!confirm(`Bạn có chắc muốn xóa ${cfg.key} = ${key}?`)) return;
+
+    try {
+        await request(cfg.api + "/" + enc(key), {method: "DELETE"});
+        await loadModule(id);
+        message(id + "-message", "Xóa thành công.");
+    } catch (error) {
+        message(id + "-message",
+            "Không thể xóa. Có thể bản ghi đang được bảng khác tham chiếu.\n" + error.message,
+            true
+        );
+    }
+}
+
+// Khởi tạo các trang và điều hướng
+buildPages();
+
+document.querySelectorAll("#menu button").forEach(button => {
+    button.addEventListener("click", () => {
+        const id = button.dataset.module || button.dataset.page;
+        showPage(id, button);
+    });
+});
+
+loadModule("students");
+loadModule("teachers");
+loadModule("companies");
+loadModule("internships");
+loadModule("registrations");
+loadModule("reports");
+loadModule("diaries");
+loadModule("evaluations");
+</script>
+</body>
+</html>
